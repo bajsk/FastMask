@@ -1,0 +1,20 @@
+
+<launch>
+
+  <arg name="remote_machine" default="hsr42" />
+
+  <machine
+      name="bjsk"
+      address="192.168.101.2"
+      user="bjsk"
+      env-loader="/home/bjsk/publicWorkspace/dev/ros/indigo/devel/remote_env_loader_$(arg remote_machine).sh"
+      />
+
+  <node
+      machine="bjsk"
+      name="fastmask_segmentation_ros_node"
+      pkg="human_parsing"
+      type="fastmask_segmentation_server.py"
+      />
+
+</launch>  
