@@ -15,24 +15,20 @@ sys.path.insert(0, fast_mask_root)
 sys.path.insert(0, pycocotools_root)
 
 import caffe
-from IPython import embed
 import config
 
 import numpy as np
-import setproctitle
 import cv2
 
 from alchemy.utils.image import resize_blob, visualize_masks, load_image
 from alchemy.utils.timer import Timer
 from alchemy.utils.mask import encode, decode, crop, iou, toBbox
 from alchemy.utils.load_config import load_config
-
 from utils import gen_masks
 
 '''
     python image_demo.py gpu_id model input_image
 '''
-
 
 COLORS = [0xE6E2AF, 0xA7A37E, 0xDC3522, 0x046380, 
         0x468966, 0xB64926, 0x8E2800, 0xFFE11A,
@@ -43,43 +39,30 @@ COLORS = [0xE6E2AF, 0xA7A37E, 0xDC3522, 0x046380,
         0xAEEE00, 0x334D5C, 0x45B29D, 0xEFC94C,
         0xE27A3F, 0xDF5A49]
 
-
-def parse_args():
-
-    parser = argparse.ArgumentParser('process image')
-    parser.add_argument('gpu_id', type=int)
-    parser.add_argument('model', type=str)
-    parser.add_argument('input_image', type=str)
-    parser.add_argument('--init_weights', type=str,
-                        default='', dest='init_weights')
-    parser.add_argument('--threshold', type=float,
-                        default=0.85, dest='threshold')
-
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == '__main__':
-    args = parse_args()
-
+    
     # caffe setup
     caffe.set_mode_gpu()
-    caffe.set_device(int(args.gpu_id))
+    gpu_id = 0
+    caffe.set_device(gpu_id)
 
-    print fast_mask_root
+    model = "fm-res39"
+    init_weights = "fm-res39_final.caffemodel"
+    input_image = fast_mask_root + "/images/frame0000.jpg"
+    threshold = 0.85
 
     net = caffe.Net(
-            fast_mask_root + 'models/' + args.model + '.test.prototxt',
-            fast_mask_root + 'params/' + args.init_weights,
+            fast_mask_root + 'models/' + model + '.test.prototxt',
+            fast_mask_root + 'params/' + init_weights,
             caffe.TEST)
 
     # load config
-    if os.path.exists("configs/%s.json" % args.model):
-        load_config("configs/%szoom.json" % args.model)
+    if os.path.exists("configs/%s.json" % model):
+        load_config("configs/%szoom.json" % model)
     else:
         print "Specified config does not exists, use the default config..."
 
-    image = cv2.imread(args.input_image)
+    image = cv2.imread(input_image)
     image = image.astype(np.float64)
     oh, ow = image.shape[:2]
     im_scale = config.TEST_SCALE * 1.0 / max(oh, ow)
@@ -96,7 +79,7 @@ if __name__ == '__main__':
     encoded_masks = encode(ret_masks)
     reserved = np.ones((len(ret_masks)))
     for i in range(len(reserved)):
-        if ret_scores[i] < args.threshold:
+        if ret_scores[i] < threshold:
             reserved[i] = 0
             continue
         if reserved[i]:
@@ -105,15 +88,13 @@ if __name__ == '__main__':
                     reserved[j] = 0
 
     temp_image = image.copy()
-    temp_image = temp_image.astype(np.uint8)
+
     
     for _ in range(len(ret_masks)):
-        if ret_scores[_] > args.threshold and reserved[_]:
+        if ret_scores[_] > threshold and reserved[_]:
             mask = ret_masks[_].copy()
             bbox = toBbox(mask)
             bbox = [int(x) for x in bbox]
-
-            # print bbox
 
             mask[mask == 1] = 0.3
             mask[mask == 0] = 1
@@ -129,6 +110,6 @@ if __name__ == '__main__':
             cv2.rectangle(temp_image, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (_color, _color, _color), 1)
             
     image = image.astype(np.uint8)
-    # cv2.imwrite("result.jpg", image)
+    temp_image = temp_image.astype(np.uint8)
     cv2.imwrite("result.jpg", temp_image)
     cv2.imwrite("mask.jpg", mask)

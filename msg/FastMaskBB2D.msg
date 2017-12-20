@@ -1,0 +1,2 @@
+fast_mask_segmentation/BoundingBox2D bbox
+float64 score

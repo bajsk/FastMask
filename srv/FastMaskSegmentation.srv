@@ -1,0 +1,3 @@
+sensor_msgs/Image rgb_img
+---
+fast_mask_segmentation/FastMaskBB2DArray segmentation_bbox_arr
