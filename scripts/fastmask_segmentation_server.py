@@ -155,6 +155,7 @@ class FastMaskSegmentationServer():
                 cv2.imwrite(fast_mask_root + "/images/mask_result.jpg", image)
                 cv2.imwrite(fast_mask_root + "/images/boundingbox_result.jpg", temp_image)
             
+            self.net = None
             return FastMaskSegmentationResponse(segmentation_bbox_arr = fastmask_bbox_arr)
 
         except cv_bridge.CvBridgeError as e:
