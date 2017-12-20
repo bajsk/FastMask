@@ -13,7 +13,7 @@
   <node
       machine="bjsk"
       name="fastmask_segmentation_ros_node"
-      pkg="human_parsing"
+      pkg="fast_mask_segmentation"
       type="fastmask_segmentation_server.py"
       />
 
